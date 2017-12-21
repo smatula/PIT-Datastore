@@ -6,7 +6,7 @@ object:
     name: PIT
     description: my domain
     display_name: 
-    priority: 2
+    priority: 4
     enabled: true
     tenant_id: 2017000000000001
     source: user
