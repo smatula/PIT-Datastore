@@ -57,47 +57,42 @@ begin
     return array
   end
   
-  log(:info, "Obtain Free Floating IP/IPS")
+  log(:info, "Create Floating IP")
 
   floating_network = $evm.vmdb(:cloud_network).find_by_id($evm.object['cloud_network_id']).name
   log(:info, "Floating Network Name: #{floating_network}")
   
-  ips = $evm.vmdb(:floating_ip).where(["cloud_network_id = ? and cloud_tenant_id = ? and status = ? and vm_id is NULL", $evm.object['cloud_network_id'], $evm.object['cloud_tenant_id'], "DOWN"])
-  log(:info, "Available Floating IPS #{ips}")
-
   ip_list = {}
-  ips.each { |f| ip_list[f.name] = f.id if f.status == 'DOWN' && f.cloud_network_id.equal?($evm.object['cloud_network_id']) && f.cloud_tenant_id.equal?($evm.object['cloud_tenant_id']) && (f.vm_id.nil? || f.vm_id == 0)} if ips
 
-  if ip_list.blank?
-    log(:info, "No Free Floating IPs - Creating One")
-    require 'fog/openstack'
+  require 'fog/openstack'
 
-    log(:info, "Object Type: #{$evm.root['vmdb_object_type']}")
-    tenant_name = $evm.vmdb(:cloud_tenant).find_by_id($evm.object['cloud_tenant_id']).name
-    ext_management_system = $evm.vmdb(:cloud_tenant).find_by_id($evm.object['cloud_tenant_id']).ext_management_system
+  log(:info, "Object Type: #{$evm.root['vmdb_object_type']}")
+  tenant_name = $evm.vmdb(:cloud_tenant).find_by_id($evm.object['cloud_tenant_id']).name
+  ext_management_system = $evm.vmdb(:cloud_tenant).find_by_id($evm.object['cloud_tenant_id']).ext_management_system
 
-    log(:info, "Connecting to tenant #{tenant_name}")
+  log(:info, "Connecting to tenant #{tenant_name}")
 
-    conn = get_fog_object(ext_management_system, "Compute", tenant_name, encrypted=true)
+  conn = get_fog_object(ext_management_system, "Compute", tenant_name, encrypted=true)
 
-    log(:info, "Got Compute connection #{conn.class} #{conn.inspect}")
+  log(:info, "Got Compute connection #{conn.class} #{conn.inspect}")
 
-    netconn = get_fog_object(ext_management_system, "Network", tenant_name, encrypted=true)
+  netconn = get_fog_object(ext_management_system, "Network", tenant_name, encrypted=true)
 
-    log(:info, "Got Network connection #{netconn.class} #{netconn.inspect}")
+  log(:info, "Got Network connection #{netconn.class} #{netconn.inspect}")
 
-    pool_name = floating_network
-    pool_name = list_external_networks(netconn).first["name"] if pool_name.nil?
+  pool_name = floating_network
+  pool_name = list_external_networks(netconn).first["name"] if pool_name.nil?
 
-    log(:info, "Allocating IP from #{pool_name}")
+  log(:info, "Allocating IP from #{pool_name}")
 
-    address = conn.allocate_address(pool_name).body
-    log(:info, "Allocated #{address['floating_ip'].inspect}")
+  address = conn.allocate_address(pool_name).body
+  log(:info, "Allocated #{address['floating_ip'].inspect}")
 
-    ip_list[address['floating_ip']['ip']] = address['floating_ip']['id']
+  ip_list[address['floating_ip']['ip']] = address['floating_ip']['id']
 
-    log(:info, "ip #{ip_list}")
-  end
+  ext_management_system.refresh
+
+  log(:info, "ip #{ip_list}")
   
   # For automation_task set return data. status and return data
   # List of IP's and their IDs

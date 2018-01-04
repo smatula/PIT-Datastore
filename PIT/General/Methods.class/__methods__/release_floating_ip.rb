@@ -108,6 +108,8 @@ begin
       automation_request.set_option(:return, JSON.generate({:status => response.status,
                                                               :return => response.body}))
   end
+  ext_management_system.refresh
+
   exit MIQ_OK
     
 rescue => err
