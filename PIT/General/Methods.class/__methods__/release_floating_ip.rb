@@ -60,8 +60,9 @@ begin
   if $evm.object['floating_ip'] and $evm.object['floating_ip_id']
     raise ArgumentError, 'To many arguments given - 1 expected'  
   end
-  
-  if (defined?($evm.object['floating_ip_id'])).nil? and (defined?($evm.object['floating_ip'])).nil?
+ 
+  if ($evm.object['floating_ip_id'].nil? or $evm.object['floating_ip_id'].blank?) and 
+     ($evm.object['floating_ip'].nil? or $evm.object['floating_ip'].blank?) 
     raise ArgumentError, 'No input argument supplied. Expected 1.'
   end
   

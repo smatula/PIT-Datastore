@@ -56,8 +56,9 @@ begin
     raise ArgumentError, 'To many VM arguments given - Specify VM by name or id not both'  
   end
   
-  if (defined?($evm.object['vm_id'])).nil? and (defined?($evm.object['vm_name'])).nil?
-    raise ArgumentError, 'No VM input argument supplied.' if (defined?(ip)).nil?
+  if ($evm.object['vm_id'].nil? or $evm.object['vm_id'].blank?) and
+     ($evm.object['vm_name'].nil? or $evm.object['vm_name'].blank?)
+    raise ArgumentError, 'No VM input argument supplied.'
   end
   
   vm = $evm.vmdb(:vm).find_by_id($evm.object['vm_id']) if $evm.object['vm_id']
